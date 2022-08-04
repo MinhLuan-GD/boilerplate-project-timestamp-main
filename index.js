@@ -29,20 +29,28 @@ app.get("/api/:date?", function (req, res) {
   if (!time) date = new Date();
   else if (time.match(/\D/)) date = new Date(time);
   else date = new Date(parseInt(time));
-  res.json({
-    unix: date.getTime(),
-    utc: `${cvDOW(date.getDay())}, ${date.getDate()} ${cvMon(
-      date.getMonth()
-    )} ${date.getFullYear()} ${addZ(date.getHours())}:${addZ(
-      date.getMinutes()
-    )}:${addZ(date.getSeconds())} GMT`,
-  });
+  if (!dateIsValid(date)) res.json({ error: "Invalid Date" });
+
+  const dow = cvDOW(date.getUTCDay());
+  const day = addZ(date.getUTCDate());
+  const month = cvMon(date.getUTCMonth());
+  const year = date.getUTCFullYear();
+  const hour = addZ(date.getUTCHours());
+  const min = addZ(date.getUTCMinutes());
+  const sec = addZ(date.getUTCSeconds());
+
+  const unix = date.getTime();
+  const utc = `${dow}, ${day} ${month} ${year} ${hour}:${min}:${sec} GMT`;
+
+  res.json({ unix, utc });
 });
 
 // listen for requests :)
 var listener = app.listen(3000, function () {
   console.log("Your app is listening on port " + listener.address().port);
 });
+
+const dateIsValid = (date) => date instanceof Date && !isNaN(date);
 
 const cvDOW = (dow) => {
   const Day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
